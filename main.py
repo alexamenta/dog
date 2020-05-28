@@ -90,13 +90,19 @@ class Playfield:
         can be specified as optional arguments.
         """
 
+        size = self.size
+
         display_dict = {True: present_symbol, False: absent_symbol}
         display_string = ""
 
         # generate the string to be displayed
         # first generate the view of the playfield
-        for y in reversed(range(self.size)):   #draw the y-axis in reverse order
-            for x in range(self.size):
+
+        display_string += '╔' + '═'*size + '╗\n'
+
+        for y in reversed(range(size)):
+            display_string += '║'
+            for x in range(size):
                 
                 # if a player is present, draw its symbol
                 for pl in self.players:
@@ -108,9 +114,10 @@ class Playfield:
                 # otherwise, draw the present or absent symbol
                 else:
                     display_string += display_dict[(x,y) in self.points]
-                    
-            # add a line break when finished with the row
-            display_string += "\n"
+                
+            display_string += '║\n'
+
+        display_string += '╚' + '═'*size + '╝'
 
         # generate list of players
         player_string = "\n  Players: \n"
@@ -118,11 +125,6 @@ class Playfield:
             player_string += "{}: {} | ".format(pl.symbol, pl.id)
 
         display_string += player_string
-
-        # draw a compass
-        compass_string = "\n      N    \n"+"    W   E   \n"+"      S "
-
-        display_string += compass_string
                          
         # display the playfield string
         print(display_string)
