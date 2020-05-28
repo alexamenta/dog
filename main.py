@@ -1,3 +1,4 @@
+import curses
 
 max_players = 2  # maximum number of players in a game
 
@@ -6,6 +7,34 @@ valid_movestrings = {'W', 'E', 'N', 'S',
                      'WW', 'EE', 'NN', 'SS',
                      'NW', 'NE', 'SW', 'SE'}
 
+class IllegalMove(Exception):
+    pass
+
+def check_legality(player, movestring):
+    "Raises IllegalMove if the proposed move is illegal"
+
+    # invalid moves are not legal
+    if not movestring in valid_movestrings:
+        raise IllegalMove
+
+    # calculate the new position
+    new_position = calculate_move(player, movestring)
+
+    # the new position must be on the playfield
+    if not new_position in player.field.points:
+        raise IllegalMove
+
+    # the new position must be unoccupied
+    if player.field.is_occupied(new_position):
+        raise IllegalMove
+
+
+#def is_legal(player, movestring):
+#    try:
+#        check_legality(player, movestring)
+#        return True
+#    except IllegalMove:
+#        return False
 
 def move_vector(move_string):
     "Given a move string, calculate the move vector"
@@ -34,26 +63,7 @@ def calculate_move(player, move_string):
     return (new_position_x, new_position_y)
 
 
-def is_legal(player, move_string):
-    "Test whether a given move is legal for a given player."
 
-    # invalid moves are not legal
-    if not move_string in valid_movestrings:
-        return False
-
-    # calculate the new position
-    new_position = calculate_move(player, move_string)
-
-    # the new position must be on the playfield
-    if not new_position in player.field.points:
-        return False
-
-    # the new position must be unoccupied
-    if player.field.is_occupied(new_position):
-        return False
-
-    # at this point, the position must be legal
-    return True
 
 
 class Playfield:
@@ -149,20 +159,25 @@ class Player:
         self.field.players.append(self)
 
     def move(self, movestring):
-        assert is_legal(self, movestring), 'Illegal move'
-
-        # keep track of the old position
-        old_position = self.position
-
-        # update the player's position
-        self.position = calculate_move(self, movestring)
-
-        # remove the old position from the playfield
-        self.field.remove(old_position)
+        try:
+            check_legality(self, movestring)
+            old_position = self.position
+            self.position = calculate_move(self, movestring)
+            self.field.remove(old_position)
+        except:
+            print("Illegal move")   # give reason why
 
     def has_legal_moves(self):
-        "Checks whether the player has any legal moves."
-        return any(is_legal(self, ms) for ms in valid_movestrings)
+        "Checks whether the player has any legal moves using Exceptions."
+        for ms in valid_movestrings:
+            try:
+                check_legality(self, ms)
+                return True
+            except IllegalMove:
+                pass
+
+        return False
+                
         
 
 class Game:
@@ -182,7 +197,7 @@ class Game:
 
         import time, random
 
-        print('Flipping a fair coin...')
+        print('Flipping a fair coin...')  
         time.sleep(1)
         current = random.randint(0,1)
         print('{} moves first.'.format(self.players[current].id))
@@ -196,13 +211,11 @@ class Game:
             player = self.players[current]
             ms = input("{}, enter your move: ".format(player.id))
             
-            # if the move is legal, make the move and change the player
-            if is_legal(player, ms):
+            try:
+                check_legality(player, ms)
                 player.move(ms)
                 current = (current + 1) % 2
-
-                # if the move is illegal, throw up a warning and reset the loop
-            else:
+            except IllegalMove:
                 print("That's not a legal move!")
                 
 
