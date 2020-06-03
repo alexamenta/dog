@@ -4,9 +4,6 @@ class IllegalMove(Exception):
     "Exception raised when a proposed move is illegal."
     pass
 
-class InvalidMovestring(Exception):
-    "Exception raised when a given movestring is invalid."
-
 def is_legal(player, dest):
     "True if dest is a legal move for player; False otherwise"
 
@@ -21,7 +18,10 @@ def is_legal(player, dest):
 
     return True
 
-    
+
+class InvalidMovestring(Exception):
+    "Exception raised when a given movestring is invalid."
+
 def process_movestring(ms):
     """
     Removes all spaces and capitalises an input string.
@@ -205,40 +205,39 @@ class Game:
 
         # gameplay loop, while the current player has legal moves
         while self.current_player.legal_destinations():
-            print('-'*32)
-            player = self.current_player
-            ms_input = input("{}, enter your move: ".format(player.id))
-            
-            try:
-                ms = process_movestring(ms_input)
-                dest = calculate_dest(player, ms)
+            self.prompt_for_move()
                 
-                try:
-                    player.move(dest)
-                    prev_mover = player  #keep track of who made the last move
-                    self.switch_player()
-                    self.field.display()
-                    
-                except IllegalMove:
-                    print("That's not a legal move!")
-                    
-            except InvalidMovestring:
-                print("Invalid input!")
-            
-
-                
-
-        # at this point, the current player has no legal moves, and the
-        # other player wins
-    
         loser = self.current_player
-        winner = prev_mover
                 
         print("!"*10)
         time.sleep(1)
-        print("{} is trapped!".format(loser.id))
+        print(f"{loser.id} is trapped!")
         time.sleep(1)
-        print("{} wins!".format(winner.id))
+        print(f"{loser.id} loses the game!")
+
+    def prompt_for_move(self):
+        """
+        Prompts the current player for a move.
+        """
+        player = self.current_player
+        ms_input = input("{}, enter your move: ".format(player.id))
+            
+        try:
+            ms = process_movestring(ms_input)
+            dest = calculate_dest(player, ms)
+                
+            try:
+                player.move(dest)
+                prev_mover = player  #keep track of who made the last move
+                self.switch_player() 
+                self.field.display()
+                    
+            except IllegalMove:
+                print("That's not a legal move!")
+                    
+        except InvalidMovestring:
+            print("Invalid input!")
+
 
 
 def process_name(input):
@@ -284,6 +283,9 @@ def prompt_for_data():
     size = int(size_input)
 
     return pl1_name, pl2_name, size
+
+
+    
        
 def play_dog():
 
