@@ -3,7 +3,12 @@ valid_movestrings = {'W', 'E', 'N', 'S',
                      'WW', 'EE', 'NN', 'SS',
                      'NW', 'NE', 'SW', 'SE'}
 
+def format_movestring(ms):
+    "Removes all spaces and capitalises an input string."
+    return ms.upper().replace(" ", "")
+
 class IllegalMove(Exception):
+    "Exception raised when a proposed move is illegal."
     pass
 
 def check_legality(player, movestring):
@@ -46,9 +51,6 @@ def calculate_move(player, move_string):
     new_position_y = player.position[1] + move_vector(move_string)[1]
 
     return (new_position_x, new_position_y)
-
-
-
 
 
 class Playfield:
@@ -193,7 +195,8 @@ class Game:
             print('-'*32)
             self.field.display()
             player = self.players[current]
-            ms = input("{}, enter your move: ".format(player.id))
+            ms_input = input("{}, enter your move: ".format(player.id))
+            ms = format_movestring(ms_input)
             
             try:
                 check_legality(player, ms)
