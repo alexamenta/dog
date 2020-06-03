@@ -4,28 +4,25 @@ class IllegalMove(Exception):
     "Exception raised when a proposed move is illegal."
     pass
 
-# the list of valid (but not necessarily legal) moves
-valid_movestrings = {'W', 'E', 'N', 'S',
-                     'WW', 'EE', 'NN', 'SS',
-                     'NW', 'NE', 'SW', 'SE'}
+def is_legal(player, dest):
+    "True if dest is a legal move for player; False otherwise"
 
+    if not dest in player.field.points:
+        return False
+
+    if player.field.is_occupied(dest):
+        return False
+
+    if not 1 <= player.distance(dest) <= 2:
+        return False
+
+    return True
+
+    
 def format_movestring(ms):
     "Removes all spaces and capitalises an input string."
     return ms.upper().replace(" ", "")
 
-    
-def check_legality(player, dest):
-    "Raises IllegalMove if the proposed move is illegal"
-
-    if not dest in player.field.points:
-        raise IllegalMove
-
-    if player.field.is_occupied(dest):
-        raise IllegalMove
-
-    if player.distance(dest) > 2:
-        raise IllegalMove
-    
 
 def move_vector(move_string):
     "Given a move string, calculate the move vector"
@@ -42,7 +39,6 @@ def move_vector(move_string):
         move_vector_y += vector_dict[char][1]
 
     return (move_vector_x, move_vector_y)
-
 
 def calculate_dest(player, move_string):
     "Given a player and a move string, calculate the destination"
@@ -141,7 +137,6 @@ class Player:
             'Player position must be on the playfield')
         self.position = position
 
-        # add player to the list of players on the playfield
         self.field.players.append(self)
 
     def distance(self, dest):
@@ -153,29 +148,20 @@ class Player:
         delta_y = abs(self.position[1] - dest[1])
         return delta_x + delta_y
 
+    def legal_destinations(self):
+        "Lists the points in the playfield to which the player can move."
+        return [pt for pt in self.field.points if is_legal(self, pt)]
+
     def move(self, dest):
         "Moves the player to a target destination, if the move is legal."
-        try:
-            check_legality(self, dest)
+        if is_legal(self, dest):
             old_position = self.position
             self.position = dest
             self.field.remove(old_position)
-        except IllegalMove:
-            print("Illegal move")
-
-    def has_legal_moves(self):
-        "Checks whether the player has any legal moves."
-        for dest in self.field.points:
-            try:
-                check_legality(self, dest)
-                return True
-            except IllegalMove:
-                pass
-
-        return False
+        else:
+            raise IllegalMove
                 
         
-
 class Game:
     "A game of Dog."
     def __init__(self, size, p1_name, p2_name):
@@ -195,24 +181,23 @@ class Game:
 
         print('Flipping a fair coin...')  
         time.sleep(1)
-        current = random.randint(0,1)
-        print('{} moves first.'.format(self.players[current].id))
+        curr_idx = random.randint(0,1)
+        print('{} moves first.'.format(self.players[curr_idx].id))
         time.sleep(1)
 
         # gameplay loop, while the current player has legal moves
-        while self.players[current].has_legal_moves() == True:
+        while self.players[curr_idx].legal_destinations():
             print('\n'*5)
             print('-'*32)
             self.field.display()
-            player = self.players[current]
+            player = self.players[curr_idx]
             ms_input = input("{}, enter your move: ".format(player.id))
             ms = format_movestring(ms_input)
             dest = calculate_dest(player, ms)
             
             try:
-                check_legality(player, dest)
                 player.move(dest)
-                current = (current + 1) % 2
+                curr_idx = (curr_idx + 1) % 2
             except IllegalMove:
                 print("That's not a legal move!")
                 
@@ -222,15 +207,13 @@ class Game:
                 
         self.field.display()
                 
-        loser = self.players[current]
-        winner = self.players[(current + 1) % 2]
+        loser = self.players[curr_idx]
+        winner = self.players[(curr_idx + 1) % 2]
                 
         print("!"*10)
         time.sleep(1)
-        print("{} has no legal moves!".format(loser.id))
+        print("{} is trapped!".format(loser.id))
         time.sleep(1)
-        print("{} blacked out!".format(loser.id))
-        time.sleep(1.5)
         print("{} wins!".format(winner.id))
 
 
@@ -247,11 +230,12 @@ def random_name():
     names = open("sample_names.txt").read().splitlines()
     return random.choice(names)
 
-       
-def play_dog():
 
-    print("~~~~DOG~~~~ (v0.2)")
-
+def prompt_for_data():
+    """
+    Prompts the user for player names and board sizes.
+    Cleans up the input and returns it.
+    """
     pl1_name_input = input("Player 1, enter your name: ")
     pl1_name = process_name(pl1_name_input)
 
@@ -275,9 +259,16 @@ def play_dog():
 
     size = int(size_input)
 
-    # initialise the game
+    return pl1_name, pl2_name, size
+       
+def play_dog():
+
+    print("~~~~DOG~~~~ (v0.2)")
+
+    pl1_name, pl2_name, size = prompt_for_data()
     game = Game(size, pl1_name, pl2_name)
     game.play()
+    
 
 if __name__ == "__main__":
     play_dog()
