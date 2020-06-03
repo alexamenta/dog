@@ -1,8 +1,11 @@
-import random
+import time, random, re
 
 class IllegalMove(Exception):
     "Exception raised when a proposed move is illegal."
     pass
+
+class InvalidMovestring(Exception):
+    "Exception raised when a given movestring is invalid."
 
 def is_legal(player, dest):
     "True if dest is a legal move for player; False otherwise"
@@ -19,10 +22,16 @@ def is_legal(player, dest):
     return True
 
     
-def format_movestring(ms):
-    "Removes all spaces and capitalises an input string."
-    return ms.upper().replace(" ", "")
-
+def process_movestring(ms):
+    """
+    Removes all spaces and capitalises an input string.
+    Raises InvalidMovestring if the movestring is invalid.
+    """
+    stripped_ms = ms.upper().replace(" ", "")
+    if not re.fullmatch("[NEWS]+", stripped_ms):
+        raise InvalidMovestring
+    return stripped_ms
+    
 
 def move_vector(move_string):
     "Given a move string, calculate the move vector"
@@ -173,42 +182,57 @@ class Game:
         
         self.players = [p1, p2]
 
+        print('Flipping a fair coin...')  
+        time.sleep(1)
         
+        self.current_player = random.choice(self.players)
+        print(f'{self.current_player.id} moves first.')
+        time.sleep(1)
+    
+    def current_player_index(self):
+        "Returns the index of the current player."
+        return self.players.index(self.current_player)
+        
+    def switch_player(self):
+        "Switches the current player."
+        curr_idx = self.current_player_index()
+        self.current_player = self.players[(curr_idx + 1) % 2]            
+            
     def play(self):
         "Play a game of Dog"
 
-        import time, random
-
-        print('Flipping a fair coin...')  
-        time.sleep(1)
-        curr_idx = random.randint(0,1)
-        print('{} moves first.'.format(self.players[curr_idx].id))
-        time.sleep(1)
+        self.field.display()
 
         # gameplay loop, while the current player has legal moves
-        while self.players[curr_idx].legal_destinations():
-            print('\n'*5)
+        while self.current_player.legal_destinations():
             print('-'*32)
-            self.field.display()
-            player = self.players[curr_idx]
+            player = self.current_player
             ms_input = input("{}, enter your move: ".format(player.id))
-            ms = format_movestring(ms_input)
-            dest = calculate_dest(player, ms)
             
             try:
-                player.move(dest)
-                curr_idx = (curr_idx + 1) % 2
-            except IllegalMove:
-                print("That's not a legal move!")
+                ms = process_movestring(ms_input)
+                dest = calculate_dest(player, ms)
+                
+                try:
+                    player.move(dest)
+                    prev_mover = player  #keep track of who made the last move
+                    self.switch_player()
+                    self.field.display()
+                    
+                except IllegalMove:
+                    print("That's not a legal move!")
+                    
+            except InvalidMovestring:
+                print("Invalid input!")
+            
+
                 
 
         # at this point, the current player has no legal moves, and the
         # other player wins
-                
-        self.field.display()
-                
-        loser = self.players[curr_idx]
-        winner = self.players[(curr_idx + 1) % 2]
+    
+        loser = self.current_player
+        winner = prev_mover
                 
         print("!"*10)
         time.sleep(1)
