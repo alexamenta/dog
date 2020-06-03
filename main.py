@@ -1,6 +1,4 @@
-import curses
-
-max_players = 2  # maximum number of players in a game
+max_players = 2
 
 # the list of valid (but not necessarily legal) moves
 valid_movestrings = {'W', 'E', 'N', 'S',
@@ -13,28 +11,18 @@ class IllegalMove(Exception):
 def check_legality(player, movestring):
     "Raises IllegalMove if the proposed move is illegal"
 
-    # invalid moves are not legal
     if not movestring in valid_movestrings:
         raise IllegalMove
 
-    # calculate the new position
     new_position = calculate_move(player, movestring)
 
     # the new position must be on the playfield
     if not new_position in player.field.points:
         raise IllegalMove
 
-    # the new position must be unoccupied
     if player.field.is_occupied(new_position):
         raise IllegalMove
 
-
-#def is_legal(player, movestring):
-#    try:
-#        check_legality(player, movestring)
-#        return True
-#    except IllegalMove:
-#        return False
 
 def move_vector(move_string):
     "Given a move string, calculate the move vector"
@@ -43,7 +31,6 @@ def move_vector(move_string):
                    'N': (0,1),
                    'S': (0,-1)}
 
-    # initialise move vector coordinate accumulators
     move_vector_x = 0
     move_vector_y = 0
 
@@ -165,7 +152,7 @@ class Player:
             self.position = calculate_move(self, movestring)
             self.field.remove(old_position)
         except:
-            print("Illegal move")   # give reason why
+            print("Illegal move")
 
     def has_legal_moves(self):
         "Checks whether the player has any legal moves using Exceptions."
