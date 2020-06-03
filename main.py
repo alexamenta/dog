@@ -1,5 +1,3 @@
-max_players = 2
-
 # the list of valid (but not necessarily legal) moves
 valid_movestrings = {'W', 'E', 'N', 'S',
                      'WW', 'EE', 'NN', 'SS',
@@ -129,11 +127,10 @@ class Playfield:
         
 class Player:
     """
-    Represents one of the two players.
+    Represents a player.
     """
     def __init__(self, field, id, position, symbol = '■'):
-        assert len(field.players) < max_players, (
-            'Field can contain maximum {} players'.format(max_players))
+        assert len(field.players) < 2, 'Field can contain maximum 2 players'
         self.field = field
         self.id = id
         self.symbol = symbol
@@ -231,9 +228,21 @@ def play_dog():
 
     pl1_name = input("Player 1, enter your name: ")
     pl2_name = input("Player 2, enter your name: ")
-    size = int(input("Enter board size (positive integer please): "))
-    # make sure this is greater than 1
 
+    # prompt for board size
+    size_selected = False
+    allowed_size_inputs = [str(i) for i in range(3,16)]
+
+    while size_selected == False:
+        size_input = input("Enter board size, between 3 and 15: ")
+        if size_input in allowed_size_inputs:
+            size_selected = True
+        else:
+            print("Board size must be an integer between 3 and 15!")
+
+    size = int(size_input)
+
+    # initialise the game
     game = Game(size, pl1_name, pl2_name)
     game.play()
 
