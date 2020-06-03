@@ -1,5 +1,9 @@
 import random
 
+class IllegalMove(Exception):
+    "Exception raised when a proposed move is illegal."
+    pass
+
 # the list of valid (but not necessarily legal) moves
 valid_movestrings = {'W', 'E', 'N', 'S',
                      'WW', 'EE', 'NN', 'SS',
@@ -9,25 +13,19 @@ def format_movestring(ms):
     "Removes all spaces and capitalises an input string."
     return ms.upper().replace(" ", "")
 
-class IllegalMove(Exception):
-    "Exception raised when a proposed move is illegal."
-    pass
-
-def check_legality(player, movestring):
+    
+def check_legality(player, dest):
     "Raises IllegalMove if the proposed move is illegal"
 
-    if not movestring in valid_movestrings:
+    if not dest in player.field.points:
         raise IllegalMove
 
-    new_position = calculate_move(player, movestring)
-
-    # the new position must be on the playfield
-    if not new_position in player.field.points:
+    if player.field.is_occupied(dest):
         raise IllegalMove
 
-    if player.field.is_occupied(new_position):
+    if player.distance(dest) > 2:
         raise IllegalMove
-
+    
 
 def move_vector(move_string):
     "Given a move string, calculate the move vector"
@@ -46,8 +44,8 @@ def move_vector(move_string):
     return (move_vector_x, move_vector_y)
 
 
-def calculate_move(player, move_string):
-    "Given a player and a move string, calculate the new position"
+def calculate_dest(player, move_string):
+    "Given a player and a move string, calculate the destination"
 
     new_position_x = player.position[0] + move_vector(move_string)[0]
     new_position_y = player.position[1] + move_vector(move_string)[1]
@@ -146,20 +144,30 @@ class Player:
         # add player to the list of players on the playfield
         self.field.players.append(self)
 
-    def move(self, movestring):
+    def distance(self, dest):
+        """
+        Gives the (Manhattan) distance from the player's position 
+        to a destination.
+        """
+        delta_x = abs(self.position[0] - dest[0])
+        delta_y = abs(self.position[1] - dest[1])
+        return delta_x + delta_y
+
+    def move(self, dest):
+        "Moves the player to a target destination, if the move is legal."
         try:
-            check_legality(self, movestring)
+            check_legality(self, dest)
             old_position = self.position
-            self.position = calculate_move(self, movestring)
+            self.position = dest
             self.field.remove(old_position)
-        except:
+        except IllegalMove:
             print("Illegal move")
 
     def has_legal_moves(self):
-        "Checks whether the player has any legal moves using Exceptions."
-        for ms in valid_movestrings:
+        "Checks whether the player has any legal moves."
+        for dest in self.field.points:
             try:
-                check_legality(self, ms)
+                check_legality(self, dest)
                 return True
             except IllegalMove:
                 pass
@@ -199,10 +207,11 @@ class Game:
             player = self.players[current]
             ms_input = input("{}, enter your move: ".format(player.id))
             ms = format_movestring(ms_input)
+            dest = calculate_dest(player, ms)
             
             try:
-                check_legality(player, ms)
-                player.move(ms)
+                check_legality(player, dest)
+                player.move(dest)
                 current = (current + 1) % 2
             except IllegalMove:
                 print("That's not a legal move!")
