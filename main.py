@@ -1,3 +1,5 @@
+import random
+
 # the list of valid (but not necessarily legal) moves
 valid_movestrings = {'W', 'E', 'N', 'S',
                      'WW', 'EE', 'NN', 'SS',
@@ -221,16 +223,35 @@ class Game:
         print("{} blacked out!".format(loser.id))
         time.sleep(1.5)
         print("{} wins!".format(winner.id))
-        time.sleep(3)
-        print("bye")
 
-        
+
+def process_name(input):
+    "Strips whitespace, and returns a random name if the input is empty."
+    if not input.strip():
+        return random_name()
+    else:
+        return input.strip()
+
+    
+def random_name():
+    "Returns a random name from a given input file. Otherwise, returns a default."
+    names = open("sample_names.txt").read().splitlines()
+    return random.choice(names)
+
+       
 def play_dog():
 
     print("~~~~DOG~~~~ (v0.2)")
 
-    pl1_name = input("Player 1, enter your name: ")
-    pl2_name = input("Player 2, enter your name: ")
+    pl1_name_input = input("Player 1, enter your name: ")
+    pl1_name = process_name(pl1_name_input)
+
+    pl2_name_input = input("Player 2, enter your name: ")
+    pl2_name = process_name(pl2_name_input)
+
+    #rename player 2 if they've chosen the same name as player 1
+    if pl2_name == pl1_name:
+        pl2_name = random_name()
 
     # prompt for board size
     size_selected = False
