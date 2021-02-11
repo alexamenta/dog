@@ -1,9 +1,15 @@
 import time, random, re
 
+
 class IllegalMove(Exception):
     "Exception raised when a proposed move is illegal."
     pass
 
+
+class InvalidMovestring(Exception):
+    "Exception raised when a given movestring is invalid."
+
+    
 def is_legal(player, dest):
     "True if dest is a legal move for player; False otherwise"
 
@@ -18,9 +24,6 @@ def is_legal(player, dest):
 
     return True
 
-
-class InvalidMovestring(Exception):
-    "Exception raised when a given movestring is invalid."
 
 def process_movestring(ms):
     """
@@ -48,6 +51,7 @@ def move_vector(move_string):
         move_vector_y += vector_dict[char][1]
 
     return (move_vector_x, move_vector_y)
+
 
 def calculate_dest(player, move_string):
     "Given a player and a move string, calculate the destination"
@@ -105,18 +109,18 @@ class Playfield:
         for y in reversed(range(size)):
             display_string += '║'
             for x in range(size):
-                
+
                 # if a player is present, draw its symbol
                 for pl in self.players:
 
                     if (x,y) == pl.position:
                         display_string += pl.symbol
                         break
-                
+
                 # otherwise, draw the present or absent symbol
                 else:
                     display_string += display_dict[(x,y) in self.points]
-                
+
             display_string += '║\n'
 
         display_string += '╚' + '═'*size + '╝'
@@ -127,11 +131,11 @@ class Playfield:
             player_string += "{}: {} | ".format(pl.symbol, pl.id)
 
         display_string += player_string
-                         
+
         # display the playfield string
         print(display_string)
 
-        
+
 class Player:
     """
     Represents a player.
@@ -169,35 +173,38 @@ class Player:
             self.field.remove(old_position)
         else:
             raise IllegalMove
-                
-        
+
+
 class Game:
     "A game of Dog."
     def __init__(self, size, p1_name, p2_name):
-        
+
         self.field = Playfield(size)
 
         p1 = Player(self.field, p1_name, (0,0), '@')
         p2 = Player(self.field, p2_name, (size-1, size-1), 'Ð')
-        
+
         self.players = [p1, p2]
 
         print('Flipping a fair coin...')  
         time.sleep(1)
-        
+
         self.current_player = random.choice(self.players)
         print(f'{self.current_player.id} moves first.')
         time.sleep(1)
-    
+
+
     def current_player_index(self):
         "Returns the index of the current player."
         return self.players.index(self.current_player)
-        
+
+
     def switch_player(self):
         "Switches the current player."
         curr_idx = self.current_player_index()
         self.current_player = self.players[(curr_idx + 1) % 2]            
-            
+
+
     def play(self):
         "Play a game of Dog"
 
@@ -206,9 +213,9 @@ class Game:
         # gameplay loop, while the current player has legal moves
         while self.current_player.legal_destinations():
             self.prompt_for_move()
-                
+
         loser = self.current_player
-                
+
         print("!"*10)
         time.sleep(1)
         print(f"{loser.id} is trapped!")
@@ -221,33 +228,32 @@ class Game:
         """
         player = self.current_player
         ms_input = input("{}, enter your move: ".format(player.id))
-            
+
         try:
             ms = process_movestring(ms_input)
             dest = calculate_dest(player, ms)
-                
+
             try:
                 player.move(dest)
                 prev_mover = player  #keep track of who made the last move
                 self.switch_player() 
                 self.field.display()
-                    
+
             except IllegalMove:
                 print("That's not a legal move!")
-                    
+
         except InvalidMovestring:
             print("Invalid input!")
-
 
 
 def process_name(input):
     "Strips whitespace, and returns a random name if the input is empty."
     if not input.strip():
         return random_name()
-    else:
-        return input.strip()
 
-    
+    return input.strip()
+
+
 def random_name():
     "Returns a random name from a given input file. Otherwise, returns a default."
     names = open("sample_names.txt").read().splitlines()
@@ -285,8 +291,6 @@ def prompt_for_data():
     return pl1_name, pl2_name, size
 
 
-    
-       
 def play_dog():
 
     print("~~~~DOG~~~~ (v0.2)")
@@ -297,8 +301,4 @@ def play_dog():
     
 
 if __name__ == "__main__":
-    play_dog()
-
-            
-
-        
+    play_dog()    
