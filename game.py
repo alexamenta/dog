@@ -1,3 +1,5 @@
+from controller import Brain
+
 class IllegalMove(Exception):
     "Exception raised when a proposed move is illegal."
 
@@ -13,8 +15,10 @@ def distance(pt1, pt2):
 class Player:
     """
     Represents a player.
+    brain (Brain): the brain controlling the player (human or AI)
     """
-    def __init__(self, field, id, position):
+    def __init__(self, brain, field, id, position):
+        self.brain = brain
         assert len(field.players) < 2, 'Field can contain maximum 2 players'
         self.field = field
         self.id = id
@@ -38,6 +42,13 @@ class Player:
         Place the player on the board.
         """
         self.position = dest
+
+    def request_move(self):
+        """
+        This is called by Game
+        Delegates the work to the brain
+        """
+        return self.brain.request_move()
 
 
 class Move:

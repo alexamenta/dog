@@ -7,6 +7,24 @@ class InvalidMovestring(Exception):
     "Exception raised when a given movestring is invalid."
 
 
+class Agent():
+    """
+    an agent
+    """
+
+
+class humanAgent(Agent):
+    """
+    a human agent
+    """
+
+
+class aiAgent(Agent):
+    """
+    an AI agent
+    """
+
+
 def process_movestring(ms):
     """
     Removes all spaces and capitalises an input string.
